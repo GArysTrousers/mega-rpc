@@ -1,5 +1,6 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { RpcClient } from "./client";
+import { Rpc } from "./types";
 
 export class RpcServer {
   replies = new Map<string, string>();

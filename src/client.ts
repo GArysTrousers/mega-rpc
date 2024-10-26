@@ -1,6 +1,7 @@
 import { WebSocket } from "ws";
 import { v4 as uuid } from "uuid";
 import { delay } from "./utils";
+import { Call, Reply, Rpc, RpcParamList } from "./types";
 
 export type ClientOptions = {
   timeoutLength?: number;

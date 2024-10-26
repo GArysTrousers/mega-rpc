@@ -1,15 +1,15 @@
-type Call = {
+export type Call = {
   id: string;
   type: 'call';
   func: string;
   params: RpcParamList;
 }
 
-type Reply = {
+export type Reply = {
   id: string;
   type: 'reply'
   data: object;
 }
 
-type Rpc = (params: RpcParamList) => Promise<any>
-type RpcParamList = { [key: string]: string | number | boolean | object }
+export type Rpc = (params: RpcParamList) => Promise<any>
+export type RpcParamList = { [key: string]: string | number | boolean | object }
