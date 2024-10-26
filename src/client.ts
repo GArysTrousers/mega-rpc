@@ -18,9 +18,10 @@ export class RpcClient {
   // Options
   timeoutLength: number;
 
-  constructor(ws: WebSocket, procedures: [string, Rpc][], options: ClientOptions = {}) {
+  constructor(ws: WebSocket | string, procedures: [string, Rpc][], options: ClientOptions = {}) {
     this.procedures = new Map(procedures)
-    this.ws = ws
+    if (typeof ws === 'string') this.ws = new WebSocket(ws)
+    else this.ws = ws
     this.ws.on('error', console.error);
     this.ws.on('message', async (data: any) => {
       const message = JSON.parse(data.toString())
@@ -32,7 +33,7 @@ export class RpcClient {
           type: 'reply',
           data: await this.procedures.get(call.func)?.call(this, call.params)
         }
-        ws.send(JSON.stringify(reply))
+        this.ws.send(JSON.stringify(reply))
       }
       else if (message.type === 'reply') {
         // console.log("Reply:", message);
@@ -40,7 +41,7 @@ export class RpcClient {
       }
     });
 
-    options = {...defaultOptions, ...options}
+    options = { ...defaultOptions, ...options }
     this.timeoutLength = options.timeoutLength
   }
 
