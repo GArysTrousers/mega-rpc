@@ -4,17 +4,6 @@ import { RpcClient, RpcServer } from "../dist/index.js";
 import { WebSocket } from "ws";
 import { delay } from "../dist/utils.js";
 
-// const server = new AuthServer()
-
-// server.addClient("Test Relay", '12345')
-
-// const relay = new AuthClient('ws://localhost:8080', '12345')
-
-// await test("hello", async () => {
-//   await server.authRequest("user", "password");
-
-// })
-
 const users = [
   { username: "qwe", password: "pass", name: "John", age: 28 },
   { username: "asd", password: "pass", name: "John", age: 28 },
