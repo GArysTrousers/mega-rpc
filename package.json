@@ -1,0 +1,29 @@
+{
+  "name": "mega-rpc",
+  "version": "0.0.1",
+  "description": "Mega RPC",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "rimraf ./dist && npx tsc",
+    "test": "npx tsc && node --test",
+    "test:quick": "node --test",
+    "test:clear": "rimraf ./dist && npx tsc && node --test"
+  },
+  "author": "GArysTrousers",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.6.3",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.5.12",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "uuid": "^10.0.0",
+    "ws": "^8.18.0"
+  }
+}
