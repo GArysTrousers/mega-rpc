@@ -1,3 +1,3 @@
 export { RpcServer } from "./server"
 export { RpcClient } from "./client"
-export * from "./types"
+export type { Call, Reply, Rpc, RpcParamList } from "./types"
