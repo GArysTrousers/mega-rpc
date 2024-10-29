@@ -21,13 +21,20 @@ const auth = (params) => {
   return false;
 }
 
+const throwError = async (params) => {
+  throw new Error("This is an error")
+}
+
 const timeout = async (params) => {
   await delay(2000);
 }
 
+
+
 const procedures = [
   ["ping", ping],
-  ["timeout", timeout]
+  ["timeout", timeout],
+  ["throwError", throwError]
 ];
 
 const serverProcs = [
@@ -42,7 +49,10 @@ const server = new RpcServer(8080, [...procedures, ...serverProcs]);
 const client = new RpcClient(
   new WebSocket('ws://localhost:8080'), 
   [...procedures, ...clientProcs],
-  {timeoutLength: 1000}
+  {
+    timeoutLength: 1000,
+    debug: true,
+  }
 );
 
 
@@ -70,13 +80,30 @@ await test("auth", async () => {
   equal(res.name, "John");
 })
 
+await test("error thrown", async () => {
+  try {
+    await client.call('throwError', {});
+    ok(false);
+  } catch (e) {
+    equal("This is an error", e.message)
+  }
+})
+
 await test("timeout", async () => {
   try {
-    const res = await client.call('timeout', {});
-    console.log("successfully failed:", res);
+    await client.call('timeout', {});
     ok(false);
   } catch (e) {
     equal("Reply Timed Out", e.message)
+  }
+})
+
+await test("missing rpc", async () => {
+  try {
+    await client.call('noSuchThing', {});
+    ok(false);
+  } catch (e) {
+    equal("No RPC found with name: noSuchThing", e.message)
   }
 })
 

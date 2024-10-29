@@ -5,19 +5,22 @@ import { Call, Reply, Rpc, RpcParamList } from "./types";
 
 export type ClientOptions = {
   timeoutLength?: number;
+  debug?: boolean;
 }
 
 const defaultOptions = {
   timeoutLength: 10000,
+  debug: false,
 }
 
 export class RpcClient {
   ws: WebSocket;
-  replies = new Map<string, string>();
+  replies = new Map<string, Reply>();
   procedures: Map<string, Rpc>;
 
   // Options
   timeoutLength: number;
+  debug: boolean;
 
   constructor(ws: WebSocket | string, procedures: [string, Rpc][], options: ClientOptions = {}) {
     this.procedures = new Map(procedures)
@@ -26,28 +29,48 @@ export class RpcClient {
     this.ws.on('error', console.error);
     this.ws.on('message', async (data: any) => {
       const message = JSON.parse(data.toString())
+
       if (message.type === 'call') {
         const call = message as Call
-        // console.log("Call:", call);
+        if (this.debug) console.log("Call:", call);
         const reply: Reply = {
           id: call.id,
           type: 'reply',
-          data: await this.procedures.get(call.func)?.call(this, call.params)
+          ok: true,
+          data: null,
+        }
+        const rpc = this.procedures.get(call.func)
+        if (rpc === undefined) {
+          reply.ok = false
+          reply.data = `No RPC found with name: ${call.func}`
+        } else {
+          try {
+            reply.data = await rpc.call(this, call.params)
+          } catch (e) {
+            reply.ok = false
+            if (e instanceof Error) {
+              reply.data = e.message
+            } else {
+              reply.data = "Unknown Error"
+            }
+          }
         }
         this.ws.send(JSON.stringify(reply))
+
       }
       else if (message.type === 'reply') {
-        // console.log("Reply:", message);
-        this.replies.set(message.id, message.data)
+        if (this.debug) console.log("Reply:", message);
+        this.replies.set(message.id, message)
       }
     });
 
     options = { ...defaultOptions, ...options }
-    this.timeoutLength = options.timeoutLength
+    this.timeoutLength = options.timeoutLength;
+    this.debug = options.debug;
   }
 
   call(procedure: string, params: RpcParamList) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const message: Call = {
         id: uuid(),
         type: 'call',
@@ -55,13 +78,14 @@ export class RpcClient {
         params,
       }
       this.ws.send(JSON.stringify(message))
-      this.waitForReply(message.id)
-        .catch((v) => reject(v))
-        .then((v) => resolve(v))
+      this.waitForReply(message.id).then(
+        (v) => resolve(v),
+        (v) => reject(v)
+      )
     })
   }
 
-  async waitForReply(id: string) {
+  async waitForReply(id: string): Promise<Reply> {
     return new Promise(async (resolve, reject) => {
       // timeout - stops waiting for reply and cleans up
       let timeoutFired = false;
@@ -75,7 +99,11 @@ export class RpcClient {
           clearTimeout(timeout)
           const res = this.replies.get(id)
           this.replies.delete(id)
-          return resolve(res);
+          if (res.ok === false) {
+            return reject(new Error(res.data))
+          } else {
+            return resolve(res.data);
+          }
         } else if (timeoutFired) {
           return reject(new Error("Reply Timed Out"));
         } else {

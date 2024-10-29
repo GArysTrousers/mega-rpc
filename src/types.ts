@@ -7,8 +7,9 @@ export type Call = {
 
 export type Reply = {
   id: string;
-  type: 'reply'
-  data: object;
+  type: 'reply';
+  ok: boolean;
+  data: any;
 }
 
 export type Rpc = (params: RpcParamList) => Promise<any>
